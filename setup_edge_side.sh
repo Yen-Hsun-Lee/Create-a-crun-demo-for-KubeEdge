@@ -21,9 +21,15 @@ tar xzvf keadm-v1.8.0-linux-amd64.tar.gz
 cd keadm-v1.8.0-linux-amd64/keadm/
 
 sudo ./keadm join \
---cloudcore-ipport=$token:10000 \
+--cloudcore-ipport=$master_ip:10000 \
 --edgenode-name=edge \
---token=$master_ip \
+--token=$token \
 --remote-runtime-endpoint=unix:///var/run/crio/crio.sock \
 --runtimetype=remote \
 --cgroupdriver=systemd
+
+sudo sed -i '/edgeStream/ {N;s/\(enable: \).*/\1true/}' /etc/kubeedge/config/edgecore.yaml
+sudo sed -i '/edgeStream/ {N;s/\(server: \).*/\1'$master_ip':10004/}' /etc/kubeedge/config/edgecore.yaml
+
+
+echo 'Finish...'
