@@ -41,7 +41,7 @@ curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/
 curl -L https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:$VERSION/$OS/Release.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
 
 sudo apt-get update
-sudo apt-get install cri-o cri-o-runc
+sudo apt-get install -y cri-o cri-o-runc
 
 sudo systemctl daemon-reload
 sudo systemctl enable crio --now
@@ -50,13 +50,12 @@ sudo systemctl enable crio --now
 
 # Install K8s
 
-
 sudo apt-get update
 sudo apt-get install -y apt-transport-https ca-certificates curl
 sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
 echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 
-sudo apt update
+sudo apt-get update
 K_VER="1.21.0-00"
 sudo apt install -y kubelet=${K_VER} kubectl=${K_VER} kubeadm=${K_VER}
 sudo apt-mark hold kubelet kubeadm kubectl
@@ -65,26 +64,29 @@ sudo apt-mark hold kubelet kubeadm kubectl
 sudo sed -i '/swap/d' /etc/fstab
 sudo swapoff -a
 
-# Creating a cluster with kubeadm for K8s
+echo -e "Creating a cluster with kubeadm for K8s..."
 export CIDR=10.85.0.0/16
 sudo kubeadm init --apiserver-advertise-address=$MASTER_IP --pod-network-cidr=$CIDR --cri-socket=/var/run/crio/crio.sock
 
+
+echo -e "Init K8s config..."
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 
-# Setup KubeEdge Master Node
+echo -e "Setup KubeEdge Master Node..."
 wget https://github.com/kubeedge/kubeedge/releases/download/v1.8.0/keadm-v1.8.0-linux-amd64.tar.gz
 tar xzvf keadm-v1.8.0-linux-amd64.tar.gz
+
 cd keadm-v1.8.0-linux-amd64/keadm/
 sudo ./keadm init --advertise-address=$MASTER_IP --kube-config=$HOME/.kube/config
 
-# Get KubeEdge Master Node token
+echo -e "Get KubeEdge Master Node token..."
 sudo ./keadm gettoken --kube-config=$HOME/.kube/config
 
-# Enable kubectl logs Feature
 
+echo -e "Enable kubectl logs Feature..."
 export CLOUDCOREIPS=$MASTER_IP
 cd ~
 git clone https://github.com/kubeedge/kubeedge.git
@@ -92,3 +94,7 @@ cp ./kubeedge/build/tools/certgen.sh /etc/kubeedge/
 /etc/kubeedge/certgen.sh stream
 
 kubectl get cm tunnelport -nkubeedge -oyaml
+
+iptables -t nat -A OUTPUT -p tcp --dport 10351 -j DNAT --to $MASTER_IP:10003
+sudo sed -i '/cloudStream/ {N;s/\(enable: \).*/\1true/}' /etc/kubeedge/config/cloudcore.yaml
+echo -e "Finish..."
