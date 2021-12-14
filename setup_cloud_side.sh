@@ -68,23 +68,25 @@ echo -e "Creating a cluster with kubeadm for K8s..."
 export CIDR=10.85.0.0/16
 sudo kubeadm init --apiserver-advertise-address=$MASTER_IP --pod-network-cidr=$CIDR --cri-socket=/var/run/crio/crio.sock
 
-
-echo -e "Init K8s config..."
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-
-
 echo -e "Setup KubeEdge Master Node..."
 wget https://github.com/kubeedge/kubeedge/releases/download/v1.8.0/keadm-v1.8.0-linux-amd64.tar.gz
 tar xzvf keadm-v1.8.0-linux-amd64.tar.gz
 
+echo -e "Init K8s config..."
+
+sudo mkdir -p $HOME/.kube
+sudo cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
 cd keadm-v1.8.0-linux-amd64/keadm/
-sudo ./keadm init --advertise-address=$MASTER_IP --kube-config=$HOME/.kube/config
+sudo ./keadm init --advertise-address=$MASTER_IP --kube-config=$HOME/.kube/config --kubeedge-version=1.8.0
+
+sleep 5
 
 echo -e "Get KubeEdge Master Node token..."
 sudo ./keadm gettoken --kube-config=$HOME/.kube/config
-
 
 echo -e "Enable kubectl logs Feature..."
 export CLOUDCOREIPS=$MASTER_IP
@@ -97,4 +99,7 @@ kubectl get cm tunnelport -nkubeedge -oyaml
 
 iptables -t nat -A OUTPUT -p tcp --dport 10351 -j DNAT --to $MASTER_IP:10003
 sudo sed -i '/cloudStream/ {N;s/\(enable: \).*/\1true/}' /etc/kubeedge/config/cloudcore.yaml
+
+sudo pkill cloudcore
+sudo nohup cloudcore > cloudcore.log 2>&1 &
 echo -e "Finish..."
