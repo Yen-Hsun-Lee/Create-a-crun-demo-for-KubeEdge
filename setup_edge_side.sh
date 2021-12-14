@@ -26,10 +26,11 @@ sudo ./keadm join \
 --token=$token \
 --remote-runtime-endpoint=unix:///var/run/crio/crio.sock \
 --runtimetype=remote \
---cgroupdriver=systemd
+--cgroupdriver=systemd \
+--kubeedge-version=1.8.0
 
 sudo sed -i '/edgeStream/ {N;s/\(enable: \).*/\1true/}' /etc/kubeedge/config/edgecore.yaml
 sudo sed -i '/edgeStream/ {N;s/\(server: \).*/\1'$master_ip':10004/}' /etc/kubeedge/config/edgecore.yaml
-
+sudo systemctl restart edgecore.service
 
 echo 'Finish...'
