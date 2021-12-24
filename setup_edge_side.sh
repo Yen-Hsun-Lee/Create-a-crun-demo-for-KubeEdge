@@ -16,9 +16,9 @@ export PATH=$PATH:/usr/local/go/bin
 
 
 # join edge node to master
-wget https://github.com/kubeedge/kubeedge/releases/download/v1.8.0/keadm-v1.8.0-linux-amd64.tar.gz
-tar xzvf keadm-v1.8.0-linux-amd64.tar.gz
-cd keadm-v1.8.0-linux-amd64/keadm/
+wget https://github.com/kubeedge/kubeedge/releases/download/v1.8.1/keadm-v1.8.1-linux-amd64.tar.gz
+tar xzvf keadm-v1.8.1-linux-amd64.tar.gz
+cd keadm-v1.8.1-linux-amd64/keadm/
 
 sudo ./keadm join \
 --cloudcore-ipport=$master_ip:10000 \
@@ -27,7 +27,7 @@ sudo ./keadm join \
 --remote-runtime-endpoint=unix:///var/run/crio/crio.sock \
 --runtimetype=remote \
 --cgroupdriver=systemd \
---kubeedge-version=1.8.0
+--kubeedge-version=1.8.1
 
 sudo sed -i '/edgeStream/ {N;s/\(enable: \).*/\1true/}' /etc/kubeedge/config/edgecore.yaml
 sudo sed -i '/edgeStream/ {N;s/\(server: \).*/\1'$master_ip':10004/}' /etc/kubeedge/config/edgecore.yaml
