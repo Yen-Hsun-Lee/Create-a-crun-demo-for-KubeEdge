@@ -80,6 +80,11 @@ kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documen
 cd keadm-v1.8.1-linux-amd64/keadm/
 sudo ./keadm init --advertise-address=$MASTER_IP --kube-config=$HOME/.kube/config --kubeedge-version=1.8.1
 
+sleep 5
+
+echo -e "Get KubeEdge Master Node token..."
+sudo ./keadm gettoken --kube-config=$HOME/.kube/config
+
 echo -e "Enable kubectl logs Feature..."
 export CLOUDCOREIPS=$MASTER_IP
 cd ~
@@ -94,10 +99,5 @@ sudo sed -i '/cloudStream/ {N;s/\(enable: \).*/\1true/}' /etc/kubeedge/config/cl
 
 sudo pkill cloudcore
 sudo nohup cloudcore > cloudcore.log 2>&1 &
-
-echo -e "Get KubeEdge Master Node token..."
-sudo ./keadm gettoken --kube-config=$HOME/.kube/config
-
-echo 'MASTER_IP:' $MASTER_IP
 
 echo -e "Finish..."
