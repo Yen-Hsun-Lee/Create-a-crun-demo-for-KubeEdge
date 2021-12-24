@@ -46,8 +46,6 @@ sudo apt-get install -y cri-o cri-o-runc
 sudo systemctl daemon-reload
 sudo systemctl enable crio --now
 
-
-
 # Install K8s
 
 sudo apt-get update
@@ -60,7 +58,6 @@ K_VER="1.21.0-00"
 sudo apt install -y kubelet=${K_VER} kubectl=${K_VER} kubeadm=${K_VER}
 sudo apt-mark hold kubelet kubeadm kubectl
 
-
 sudo sed -i '/swap/d' /etc/fstab
 sudo swapoff -a
 
@@ -69,8 +66,8 @@ export CIDR=10.85.0.0/16
 sudo kubeadm init --apiserver-advertise-address=$MASTER_IP --pod-network-cidr=$CIDR --cri-socket=/var/run/crio/crio.sock
 
 echo -e "Setup KubeEdge Master Node..."
-wget https://github.com/kubeedge/kubeedge/releases/download/v1.8.0/keadm-v1.8.0-linux-amd64.tar.gz
-tar xzvf keadm-v1.8.0-linux-amd64.tar.gz
+wget https://github.com/kubeedge/kubeedge/releases/download/v1.8.1/keadm-v1.8.1-linux-amd64.tar.gz
+tar xzvf keadm-v1.8.1-linux-amd64.tar.gz
 
 echo -e "Init K8s config..."
 
@@ -80,13 +77,8 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 
-cd keadm-v1.8.0-linux-amd64/keadm/
-sudo ./keadm init --advertise-address=$MASTER_IP --kube-config=$HOME/.kube/config --kubeedge-version=1.8.0
-
-sleep 5
-
-echo -e "Get KubeEdge Master Node token..."
-sudo ./keadm gettoken --kube-config=$HOME/.kube/config
+cd keadm-v1.8.1-linux-amd64/keadm/
+sudo ./keadm init --advertise-address=$MASTER_IP --kube-config=$HOME/.kube/config --kubeedge-version=1.8.1
 
 echo -e "Enable kubectl logs Feature..."
 export CLOUDCOREIPS=$MASTER_IP
@@ -102,4 +94,10 @@ sudo sed -i '/cloudStream/ {N;s/\(enable: \).*/\1true/}' /etc/kubeedge/config/cl
 
 sudo pkill cloudcore
 sudo nohup cloudcore > cloudcore.log 2>&1 &
+
+echo -e "Get KubeEdge Master Node token..."
+sudo ./keadm gettoken --kube-config=$HOME/.kube/config
+
+echo 'MASTER_IP:' $MASTER_IP
+
 echo -e "Finish..."
